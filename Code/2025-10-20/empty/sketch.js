@@ -1,27 +1,24 @@
-function setup() {                    // setup() runs once at the start to get everything ready
-    createCanvas(700, 700);            // make a 700 by 700 pixel drawing paper
-    noStroke();                        // shapes will have no outline (no border)
-    rectMode(CENTER); // center rects on (x,y) // when we draw rectangles, x,y is the center
+function setup() {                    // setup runs once
+    createCanvas(700, 700);
+    noStroke();
+    rectMode(CENTER);
 }
 
-function draw() {                     // draw() paints on the paper
-    background(255);                  // paint the background white (255 is white)
+function draw() {                     // draw runs every frame (mouse moves update)
+    background(255);
 
-    const cols = 11;                  // number of circles across (11 columns)
-    const rows = 11;                  // number of circles down (11 rows)
-    const margin = 40;                // keep 40 pixels empty around the edges
-    const gridW = width - margin * 2; // usable width inside the left and right margins
-    const gridH = height - margin * 2;// usable height inside the top and bottom margins
+    const cols = 11;
+    const rows = 11;
+    const margin = 40;
+    const gridW = width - margin * 2;
+    const gridH = height - margin * 2;
 
-    // distance between grid points — use cols-1 so circles sit on edges too
-    const cell = min(gridW / (cols - 1), gridH / (rows - 1)); // how far apart centers are
-    const diskSize = cell * 0.9; // circle diameter  // make circles 90% of that spacing
+    const cell = min(gridW / (cols - 1), gridH / (rows - 1));
+    const diskSize = cell * 0.9;
 
-    // use the mouse as the "center" for rectangle scaling
-    const cx = mouseX;             // mouse x (rectangles follow the mouse)
-    const cy = mouseY;             // mouse y (rectangles follow the mouse)
-
-    // compute the farthest distance from the mouse to any corner of the canvas
+    // mouse is the center for the rectangle scaling
+    const cx = mouseX;
+    const cy = mouseY;
     const maxDist = max(
       dist(cx, cy, 0, 0),
       dist(cx, cy, width, 0),
@@ -29,26 +26,43 @@ function draw() {                     // draw() paints on the paper
       dist(cx, cy, width, height)
     );
 
-    for (let iy = 0; iy < rows; iy++) { // loop over each row (iy is the row number)
-        for (let ix = 0; ix < cols; ix++) { // loop over each column (ix is the column number)
-            const x = margin + ix * gridW / (cols - 1); // x position of this circle center
-            const y = margin + iy * gridH / (rows - 1); // y position of this circle center
+    // draw primary circles + white rounded rectangles (rect size shrinks with distance from mouse)
+    for (let iy = 0; iy < rows; iy++) {
+        for (let ix = 0; ix < cols; ix++) {
+            const x = margin + ix * gridW / (cols - 1);
+            const y = margin + iy * gridH / (rows - 1);
 
-            // black circle
-            fill(0);               // set color to black (0 is black)
-            ellipse(x, y, diskSize); // draw a circle at x,y with diameter diskSize
+            fill(0);
+            ellipse(x, y, diskSize);
 
-            // keep rect width the same, but make rect height shrink toward the mouse
-            const slotW = diskSize * 0.6;   // fixed width of the inner rectangle
-            // compute normalized distance from mouse (0..1)
-            const t = constrain(dist(x, y, cx, cy) / maxDist, 0, 1); // t = 0 at mouse, 1 far away
-            // height interpolates from larger near the mouse to very small far away
-            const slotH = lerp(diskSize * 0.30, diskSize * 0.03, t); // interpolate height by t
-            const corner = slotH * 0.6;     // how rounded the rectangle corners are
+            const slotW = diskSize * 0.6;
+            const t = constrain(dist(x, y, cx, cy) / maxDist, 0, 1); // 0 near mouse, 1 far
+            const slotH = lerp(diskSize * 0.30, diskSize * 0.03, t);
+            const corner = slotH * 0.6;
 
-            // white rounded rectangle inside the circle
-            fill(255);              // set color to white (255 is white)
-            rect(x, y, slotW, slotH, corner); // draw the rounded rectangle centered at x,y
+            fill(255);
+            rect(x, y, slotW, slotH, corner);
+        }
+    }
+
+    // draw small circles in the white spaces between primary circles
+    // their sizes do the opposite of the rectangles:
+    // - near the mouse (rectangles large) => small circles become small
+    // - far from the mouse (rectangles small) => small circles become larger
+    const stepX = gridW / (cols - 1);
+    const stepY = gridH / (rows - 1);
+    const smallMax = diskSize * 0.45; // largest small circle
+    const smallMin = diskSize * 0.12; // smallest small circle
+
+    fill(0); // small circles are black in the white gaps
+    for (let iy = 0; iy < rows - 1; iy++) {
+        for (let ix = 0; ix < cols - 1; ix++) {
+            const sx = margin + (ix + 0.5) * stepX; // between columns
+            const sy = margin + (iy + 0.5) * stepY; // between rows
+            const tt = constrain(dist(sx, sy, cx, cy) / maxDist, 0, 1); // same normalised distance
+            // opposite mapping: near mouse -> smallMin, far -> smallMax
+            const sSize = lerp(smallMin, smallMax, tt);
+            ellipse(sx, sy, sSize);
         }
     }
 }
