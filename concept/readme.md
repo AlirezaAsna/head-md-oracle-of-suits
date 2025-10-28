@@ -18,6 +18,7 @@ It’s an evil moustache and it becomes happy. The moustache is angry because it
 
 * Prototype small code about hand tracking match it to the screen
 https://alirezaasna.github.io/head-md-oracle-of-suits/Code/2025-10-28/moustache-razor-tracking/
+
 * detect the hand in a specific gesture (grabbing a razor) grab move release
 
 * Escape moustache (moves away from cursor) makes you draw a shape or thing on the screen, so you make a element appear.
